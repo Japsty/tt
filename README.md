@@ -28,6 +28,38 @@ Tarantool-based applications.
   * [Setting Tarantool configuration parameters via environment variables](#setting-tarantool-configuration-parameters-via-environment-variables)
 * [Commands](#commands)
 
+## Intro
+
+```mermaid
+    C4Component
+
+    Container_Boundary(env, "Environment") {
+      Component(cfg, "tt.yaml")
+
+      Container(bin, "bin", "tt, tt-ee, tarantool, tarantool-ee")
+      Container(modules, "modules", "ext_module_1, ext_module_2")
+      Container(locrep, "LocalRepos", "distfiles, rocks")
+      Container_Boundary(enabled, "instances.enabled") {
+        Component(app1, "app.lua")
+        Container(app2, "app2", "init.lua, ...")
+        Container(multi_inst_app, "multi instances app", "instances.yml, ...")
+        }
+        Container_Boundary(var, "var") {
+            Container_Boundary(run, "run") {
+                Container(app_run, "app_name", "app_name.pid, app_name.socket")
+            }
+            Container_Boundary(log, "log") {
+                Container(app_log, "app_name", "app_name.log")
+            }
+            Container_Boundary(log, "log") {
+                Container(app_log, "app_name", "app_name.log")
+            }
+            Container_Boundary(lib, "lib") {
+                Container(app_lib, "app_name", "xxx.snap, xxx.xlog")
+            }
+        }
+    }
+```
 
 ## Getting started
 
