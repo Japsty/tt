@@ -175,7 +175,8 @@ func TestCopyBinaries(t *testing.T) {
 				require.NoErrorf(t, err, "failed to remove the file: %v", err)
 			}
 
-			err = copyBinaries(cmdCtx.Cli.TarantoolCli, filepath.Join(testCopyDir, testCase))
+			err = copyBinaries(PackCtx{}, cmdCtx.Cli.TarantoolCli,
+				filepath.Join(testCopyDir, testCase))
 			if testCase == "missing" {
 				require.Equal(t, true, strings.Contains(err.Error(),
 					"no such file or directory"))

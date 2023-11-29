@@ -75,7 +75,6 @@ def prepare_tgz_test_cases(tt_cmd) -> list:
             "check_exist": [
                 os.path.join("app2", "init.lua"),
                 os.path.join("app.lua"),
-                os.path.join("bin", "tarantool"),
                 os.path.join("bin", "tt"),
                 os.path.join("modules", "test_module.txt"),
             ],
@@ -98,7 +97,6 @@ def prepare_tgz_test_cases(tt_cmd) -> list:
             "check_exist": [
                 os.path.join("app2", "init.lua"),
                 os.path.join("app.lua"),
-                os.path.join("bin", "tarantool"),
                 os.path.join("bin", "tt"),
                 os.path.join("modules", "test_module.txt"),
             ],
@@ -116,11 +114,12 @@ def prepare_tgz_test_cases(tt_cmd) -> list:
                 os.path.join("app2", "init.lua"),
                 os.path.join("app2", ".rocks"),
                 os.path.join("app.lua"),
-                os.path.join("bin", "tarantool"),
                 os.path.join("bin", "tt"),
                 os.path.join("modules", "test_module.txt"),
             ],
-            "check_not_exist": [],
+            "check_not_exist": [
+                os.path.join("bin", "tarantool"),
+            ],
             "artifacts_in_separated_dir": False,
         },
         {
@@ -134,11 +133,12 @@ def prepare_tgz_test_cases(tt_cmd) -> list:
                 os.path.join("app2", "init.lua"),
                 os.path.join("app2", ".rocks"),
                 os.path.join("app.lua"),
-                os.path.join("bin", "tarantool"),
                 os.path.join("bin", "tt"),
                 os.path.join("modules", "test_module.txt"),
             ],
-            "check_not_exist": [],
+            "check_not_exist": [
+                os.path.join("bin", "tarantool"),
+            ],
             "artifacts_in_separated_dir": False,
         },
         {
@@ -168,7 +168,6 @@ def prepare_tgz_test_cases(tt_cmd) -> list:
                 os.path.join("app2", "init.lua"),
                 os.path.join("app2", ".rocks"),
                 os.path.join("app.lua"),
-                os.path.join("bin", "tarantool"),
                 os.path.join("bin", "tt"),
             ],
             "check_not_exist": [],
@@ -268,7 +267,6 @@ def prepare_tgz_test_cases(tt_cmd) -> list:
                 os.path.join("app2", "init.lua"),
                 os.path.join("app2", ".rocks"),
                 os.path.join("app.lua"),
-                os.path.join("bin", "tarantool"),
                 os.path.join("bin", "tt"),
                 os.path.join("modules", "test_module.txt"),
                 os.path.join("instances.enabled", "app1", "var", "lib", "app1", "test.xlog"),
@@ -286,6 +284,7 @@ def prepare_tgz_test_cases(tt_cmd) -> list:
             ],
             "check_not_exist": [
                 "var",
+                os.path.join("bin", "tarantool"),
             ],
             "artifacts_in_separated_dir": False,
         },
@@ -299,7 +298,6 @@ def prepare_tgz_test_cases(tt_cmd) -> list:
                 os.path.join("app2", "init.lua"),
                 os.path.join("app2", ".rocks"),
                 os.path.join("app.lua"),
-                os.path.join("bin", "tarantool"),
                 os.path.join("bin", "tt"),
                 os.path.join("modules", "test_module.txt"),
                 os.path.join("instances.enabled", "app1", "var", "vinyl", "app1"),
@@ -332,7 +330,6 @@ def prepare_tgz_test_cases(tt_cmd) -> list:
                 os.path.join("app2", "init.lua"),
                 os.path.join("app2", ".rocks"),
                 os.path.join("app1.lua"),
-                os.path.join("bin", "tarantool"),
                 os.path.join("bin", "tt"),
                 os.path.join("modules", "test_module.txt"),
             ],
@@ -354,13 +351,12 @@ def prepare_tgz_test_cases(tt_cmd) -> list:
             "check_exist": [
                 os.path.join("app2", "init.lua"),
                 os.path.join("app2", ".rocks"),
-
-                os.path.join("bin", "tarantool"),
                 os.path.join("bin", "tt"),
                 os.path.join("modules", "test_module.txt"),
             ],
             "check_not_exist": [
                 os.path.join("app.lua"),
+                os.path.join("bin", "tarantool"),
             ],
             "artifacts_in_separated_dir": False,
         },
@@ -372,7 +368,6 @@ def prepare_tgz_test_cases(tt_cmd) -> list:
             "res_file": "cartridge_app-v2." + get_arch() + ".tar.gz",
             "check_exist": [
                 os.path.join("cartridge_app"),
-                os.path.join("bin", "tarantool"),
                 os.path.join("bin", "tt"),
                 os.path.join("cartridge_app", "app", "roles", "custom.lua"),
                 os.path.join("cartridge_app", "app", "admin.lua"),
@@ -396,7 +391,6 @@ def prepare_tgz_test_cases(tt_cmd) -> list:
             "res_file": "cartridge_app-v2." + get_arch() + ".tar.gz",
             "check_exist": [
                 os.path.join("cartridge_app"),
-                os.path.join("bin", "tarantool"),
                 os.path.join("bin", "tt"),
                 os.path.join("cartridge_app", "app", "roles", "custom.lua"),
                 os.path.join("cartridge_app", "app", "admin.lua"),
@@ -420,7 +414,6 @@ def prepare_tgz_test_cases(tt_cmd) -> list:
             "res_file": "bundle6-v1." + get_arch() + ".tar.gz",
             "check_exist": [
                 os.path.join("app.lua"),
-                os.path.join("bin", "tarantool"),
                 os.path.join("bin", "tt"),
                 os.path.join("instances.enabled", "app.lua"),
                 os.path.join("instances.enabled", "app", "var", "wal", "app", "artifact_wal"),
@@ -438,7 +431,6 @@ def prepare_tgz_test_cases(tt_cmd) -> list:
             "res_file": "bundle7-v1." + get_arch() + ".tar.gz",
             "check_exist": [
                 os.path.join("app.lua"),
-                os.path.join("bin", "tarantool"),
                 os.path.join("bin", "tt"),
                 os.path.join("instances.enabled", "app.lua"),
                 os.path.join("instances.enabled", "app", "var", "wal", "app", "artifact_wal"),
@@ -447,6 +439,22 @@ def prepare_tgz_test_cases(tt_cmd) -> list:
             ],
             "check_not_exist": [],
             "artifacts_in_separated_dir": True,
+        },
+        {
+            "name": "Test packing tarantool from repo.",
+            "bundle_src": "bundle10",
+            "cmd": tt_cmd,
+            "pack_type": "tgz",
+            "args": [],
+            "res_file": "bundle10-0.1.0.0." + get_arch() + ".tar.gz",
+            "check_exist": [
+                os.path.join("instances.enabled", "app", "init.lua"),
+                os.path.join("app"),
+                os.path.join("bin", "tarantool"),
+                os.path.join("bin", "tt"),
+            ],
+            "check_not_exist": [],
+            "artifacts_in_separated_dir": False,
         },
     ]
 

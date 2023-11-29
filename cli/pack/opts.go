@@ -23,7 +23,7 @@ func FillCtx(cmdCtx *cmdcontext.CmdCtx, packCtx *PackCtx,
 		return errors.New("cannot pack with integrity checks in cartridge-compat mode")
 	}
 
-	packCtx.TarantoolIsSystem = cmdCtx.Cli.IsSystem
+	packCtx.TarantoolIsSystem = !cmdCtx.Cli.IsTarantoolBinFromRepo
 	packCtx.TarantoolExecutable = cmdCtx.Cli.TarantoolCli.Executable
 	packCtx.Type = args[0]
 

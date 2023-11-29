@@ -209,14 +209,11 @@ func prepareBundle(cmdCtx *cmdcontext.CmdCtx, packCtx *PackCtx,
 	if packCtx.CartridgeCompat {
 		pkgBin = util.JoinPaths(basePath, packCtx.Name)
 	}
+
 	// Copy binaries step.
-	if cliOpts.Env.BinDir != "" &&
-		((!packCtx.TarantoolIsSystem && !packCtx.WithoutBinaries) ||
-			packCtx.WithBinaries) {
-		err = copyBinaries(cmdCtx.Cli.TarantoolCli, pkgBin)
-		if err != nil {
-			return "", err
-		}
+	err = copyBinaries(*packCtx, cmdCtx.Cli.TarantoolCli, pkgBin)
+	if err != nil {
+		return "", err
 	}
 
 	// Copy all apps to a temp directory step.
@@ -593,7 +590,11 @@ func normalizeGitVersion(packageVersion string) (string, error) {
 
 // copyBinaries copies tarantool and tt binaries from the current
 // tt environment to the passed destination path.
-func copyBinaries(tntCli cmdcontext.TarantoolCli, destPath string) error {
+func copyBinaries(packCtx PackCtx, tntCli cmdcontext.TarantoolCli, destPath string) error {
+	if packCtx.WithoutBinaries {
+		return nil
+	}
+
 	ttBin, err := os.Executable()
 	if err != nil {
 		return err
@@ -609,6 +610,13 @@ func copyBinaries(tntCli cmdcontext.TarantoolCli, destPath string) error {
 	err = copy.Copy(ttBin, filepath.Join(destPath, filepath.Base(ttBin)))
 	if err != nil {
 		return err
+	}
+
+	// Copy tarantool executable.
+	if packCtx.TarantoolIsSystem && !packCtx.WithBinaries && !packCtx.CartridgeCompat {
+		log.Info("Tarantool executable will not be packed because it is a system binary. Use " +
+			"--with-binaries option to force packing all binaries.")
+		return nil
 	}
 
 	tntBin, err := filepath.EvalSymlinks(tntCli.Executable)

@@ -1,0 +1,3 @@
+#!/bin/sh
+
+echo "Tarantool 2.11.1-0-g96877bd35"
