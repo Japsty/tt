@@ -119,8 +119,8 @@ func (c *CConfigSource) patchInstanceConfig(instanceName string, force bool,
 func (c *CConfigSource) patchConfigWithRoles(ctx RolesAddCtx,
 	getPathFunc func(clusterConfig libcluster.ClusterConfig,
 		ctx RolesAddCtx) (paths []path, err error),
-	patchFunc func(config *libcluster.Config, path []string,
-		roleNames []string) (*libcluster.Config, error),
+	patchFunc func(config *libcluster.Config,
+		targets []patchRoleTarget) (*libcluster.Config, error),
 ) error {
 	configData, clusterConfig, err := collectCConfig(c.collector)
 	if err != nil {
@@ -131,10 +131,8 @@ func (c *CConfigSource) patchConfigWithRoles(ctx RolesAddCtx,
 		return err
 	}
 
-	var (
-		target  patchTarget
-		patched *libcluster.Config
-	)
+	var target patchTarget
+	pRoleTarget := make([]patchRoleTarget, 0, len(paths))
 
 	for _, path := range paths {
 		value, err := clusterConfig.RawConfig.Get(path.path)
@@ -165,16 +163,15 @@ func (c *CConfigSource) patchConfigWithRoles(ctx RolesAddCtx,
 			return err
 		}
 
-		curPatched, err := patchFunc(target.config, path.path, existingRoles)
-		if err != nil {
-			return err
-		}
+		pRoleTarget = append(pRoleTarget, patchRoleTarget{
+			path:      path.path,
+			roleNames: existingRoles,
+		})
+	}
 
-		if patched != nil {
-			patched.Merge(curPatched)
-			continue
-		}
-		patched = curPatched
+	patched, err := patchFunc(target.config, pRoleTarget)
+	if err != nil {
+		return err
 	}
 	err = c.publisher.Publish(target.key, target.revision, []byte(patched.String()))
 	if err != nil {
