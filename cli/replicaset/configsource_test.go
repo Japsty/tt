@@ -120,7 +120,7 @@ func TestCConfigSource_collect_config_error(t *testing.T) {
 		},
 		{
 			func(source *replicaset.CConfigSource) error {
-				return source.AddRole(replicaset.RolesAddCtx{})
+				return source.AddRole(replicaset.RolesUpdateCtx{})
 			},
 		},
 	}
@@ -218,8 +218,8 @@ func TestCConfigSource_Promote_invalid_failover(t *testing.T) {
 }
 
 func TestCConfigSource_Promote_single_key(t *testing.T) {
-	keyPicker := replicaset.KeyPicker(func(keys []string, _ bool, _ string) (int, error) {
-		require.Equal(t, []string{"all"}, keys)
+	keyPicker := replicaset.KeyPicker(func(opts replicaset.PickPatchKeyOpts) (int, error) {
+		require.Equal(t, []string{"all"}, opts.Keys)
 		return 0, nil
 	})
 	dir := filepath.Join("testdata", "cconfig_source", "promote", "single_key")
@@ -275,13 +275,13 @@ func TestCConfigSource_passes_force(t *testing.T) {
 		},
 		{
 			func(source *replicaset.CConfigSource) error {
-				return source.AddRole(replicaset.RolesAddCtx{InstName: instName, Force: true})
+				return source.AddRole(replicaset.RolesUpdateCtx{InstName: instName, Force: true})
 			},
 		},
 	}
 	for _, tc := range cases {
-		keyPicker := replicaset.KeyPicker(func(_ []string, force bool, _ string) (int, error) {
-			require.True(t, force)
+		keyPicker := replicaset.KeyPicker(func(opts replicaset.PickPatchKeyOpts) (int, error) {
+			require.True(t, opts.Force)
 			return 0, nil
 		})
 		publisher := newOnceMockDataPublisher(nil)
@@ -323,7 +323,7 @@ func TestCConfigSource_publish_error(t *testing.T) {
 		},
 		{
 			func(source *replicaset.CConfigSource) error {
-				return source.AddRole(replicaset.RolesAddCtx{InstName: instName})
+				return source.AddRole(replicaset.RolesUpdateCtx{InstName: instName})
 			},
 		},
 	}
@@ -333,7 +333,7 @@ func TestCConfigSource_publish_error(t *testing.T) {
 		collector := newOnceMockDataCollector([]libcluster.Data{
 			{Source: "all", Value: cfg},
 		}, nil)
-		keyPicker := replicaset.KeyPicker(func(_ []string, _ bool, _ string) (int, error) {
+		keyPicker := replicaset.KeyPicker(func(_ replicaset.PickPatchKeyOpts) (int, error) {
 			return 0, nil
 		})
 		source := replicaset.NewCConfigSource(collector, publisher, keyPicker)
@@ -371,7 +371,7 @@ func TestCConfigSource_keypick_error(t *testing.T) {
 		},
 		{
 			func(source *replicaset.CConfigSource) error {
-				return source.AddRole(replicaset.RolesAddCtx{InstName: instName})
+				return source.AddRole(replicaset.RolesUpdateCtx{InstName: instName})
 			},
 		},
 	}
@@ -381,7 +381,7 @@ func TestCConfigSource_keypick_error(t *testing.T) {
 			{Source: "all", Value: cfg},
 		}, nil)
 		err := fmt.Errorf("it's too late")
-		keyPicker := replicaset.KeyPicker(func(_ []string, _ bool, _ string) (int, error) {
+		keyPicker := replicaset.KeyPicker(func(_ replicaset.PickPatchKeyOpts) (int, error) {
 			return 0, err
 		})
 		source := replicaset.NewCConfigSource(collector, publisher, keyPicker)
@@ -413,7 +413,7 @@ func TestCConfigSource_Promote_invalid_config(t *testing.T) {
 		},
 		{
 			func(source *replicaset.CConfigSource) error {
-				return source.AddRole(replicaset.RolesAddCtx{})
+				return source.AddRole(replicaset.RolesUpdateCtx{})
 			},
 		},
 	}
@@ -454,8 +454,8 @@ func TestCConfigSource_Promote_many_keys(t *testing.T) {
 			}
 			collector := newOnceMockDataCollector(data, nil)
 			publisher := newOnceMockDataPublisher(nil)
-			picker := replicaset.KeyPicker(func(keys []string, _ bool, _ string) (int, error) {
-				require.Equal(t, tc.keys, keys)
+			picker := replicaset.KeyPicker(func(opts replicaset.PickPatchKeyOpts) (int, error) {
+				require.Equal(t, tc.keys, opts.Keys)
 				return 0, nil
 			})
 			source := replicaset.NewCConfigSource(collector, publisher, picker)
@@ -489,8 +489,8 @@ func TestCConfigSource_Promote_many_keys_choose_affects(t *testing.T) {
 		{Source: "a", Value: cfg, Revision: 13},
 		{Source: "b", Value: cfg, Revision: revision},
 	}, nil)
-	picker := replicaset.KeyPicker(func(keys []string, _ bool, _ string) (int, error) {
-		require.Equal(t, []string{"a", "b"}, keys)
+	picker := replicaset.KeyPicker(func(opts replicaset.PickPatchKeyOpts) (int, error) {
+		require.Equal(t, []string{"a", "b"}, opts.Keys)
 		return 1, nil
 	})
 	publisher := newOnceMockDataPublisher(nil)
@@ -545,8 +545,8 @@ func TestCConfigSource_Promote_mix_failovers(t *testing.T) {
 				{Source: "c", Value: cfg3},
 			}, nil)
 			publisher := newOnceMockDataPublisher(nil)
-			picker := replicaset.KeyPicker(func(keys []string, _ bool, _ string) (int, error) {
-				require.Equal(t, []string{tc.key}, keys)
+			picker := replicaset.KeyPicker(func(opts replicaset.PickPatchKeyOpts) (int, error) {
+				require.Equal(t, []string{tc.key}, opts.Keys)
 				return 0, nil
 			})
 			source := replicaset.NewCConfigSource(collector, publisher, picker)
@@ -607,8 +607,8 @@ func TestCConfigSource_Demote_invalid_failover(t *testing.T) {
 }
 
 func TestCConfigSource_Demote_single_key(t *testing.T) {
-	keyPicker := replicaset.KeyPicker(func(keys []string, _ bool, _ string) (int, error) {
-		require.Equal(t, []string{"all"}, keys)
+	keyPicker := replicaset.KeyPicker(func(opts replicaset.PickPatchKeyOpts) (int, error) {
+		require.Equal(t, []string{"all"}, opts.Keys)
 		return 0, nil
 	})
 	dir := filepath.Join("testdata", "cconfig_source", "demote", "single_key")
@@ -658,8 +658,8 @@ func TestCConfigSource_Demote_many_keys(t *testing.T) {
 			}
 			collector := newOnceMockDataCollector(data, nil)
 			publisher := newOnceMockDataPublisher(nil)
-			picker := replicaset.KeyPicker(func(keys []string, _ bool, _ string) (int, error) {
-				require.Equal(t, tc.keys, keys)
+			picker := replicaset.KeyPicker(func(opts replicaset.PickPatchKeyOpts) (int, error) {
+				require.Equal(t, tc.keys, opts.Keys)
 				return 0, nil
 			})
 			source := replicaset.NewCConfigSource(collector, publisher, picker)
@@ -705,8 +705,8 @@ func TestCConfigSource_Demote_many_keys_choose_affects(t *testing.T) {
 		{Source: "a", Value: cfg, Revision: 13},
 		{Source: "b", Value: cfg, Revision: revision},
 	}, nil)
-	picker := replicaset.KeyPicker(func(keys []string, _ bool, _ string) (int, error) {
-		require.Equal(t, []string{"a", "b"}, keys)
+	picker := replicaset.KeyPicker(func(opts replicaset.PickPatchKeyOpts) (int, error) {
+		require.Equal(t, []string{"a", "b"}, opts.Keys)
 		return 1, nil
 	})
 	publisher := newOnceMockDataPublisher(nil)
@@ -728,8 +728,8 @@ func TestCConfigSource_Expel_single_key(t *testing.T) {
 	collector := newOnceMockDataCollector([]libcluster.Data{
 		{Source: "a", Value: cfg, Revision: revision},
 	}, nil)
-	picker := replicaset.KeyPicker(func(keys []string, _ bool, _ string) (int, error) {
-		require.Equal(t, []string{"a"}, keys)
+	picker := replicaset.KeyPicker(func(opts replicaset.PickPatchKeyOpts) (int, error) {
+		require.Equal(t, []string{"a"}, opts.Keys)
 		return 0, nil
 	})
 	publisher := newOnceMockDataPublisher(nil)
@@ -759,17 +759,16 @@ func TestCConfigSource_AddRole(t *testing.T) {
             iproto:
               listen: {}`)
 	type tCase struct {
-		name        string
-		rolesAddCtx replicaset.RolesAddCtx
-		cfg         []byte
-		expectedCfg []byte
-		isErr       bool
-		errMsg      string
+		name           string
+		rolesUpdateCtx replicaset.RolesUpdateCtx
+		cfg            []byte
+		expectedCfg    []byte
+		errMsg         string
 	}
 	cases := []tCase{
 		{
 			name: "ok global",
-			rolesAddCtx: replicaset.RolesAddCtx{
+			rolesUpdateCtx: replicaset.RolesUpdateCtx{
 				IsGlobal: true,
 				RoleName: "config.storage",
 			},
@@ -781,7 +780,7 @@ roles:
 		},
 		{
 			name: "ok group",
-			rolesAddCtx: replicaset.RolesAddCtx{
+			rolesUpdateCtx: replicaset.RolesUpdateCtx{
 				GroupName: "group-1",
 				RoleName:  "config.storage",
 			},
@@ -793,7 +792,7 @@ roles:
 		},
 		{
 			name: "ok replicaset",
-			rolesAddCtx: replicaset.RolesAddCtx{
+			rolesUpdateCtx: replicaset.RolesUpdateCtx{
 				ReplicasetName: "replicaset-001",
 				RoleName:       "config.storage",
 			},
@@ -805,7 +804,7 @@ roles:
 		},
 		{
 			name: "ok instance",
-			rolesAddCtx: replicaset.RolesAddCtx{
+			rolesUpdateCtx: replicaset.RolesUpdateCtx{
 				InstName: "instance-001",
 				RoleName: "config.storage",
 			},
@@ -817,7 +816,7 @@ roles:
 		},
 		{
 			name: "ok many scopes",
-			rolesAddCtx: replicaset.RolesAddCtx{
+			rolesUpdateCtx: replicaset.RolesUpdateCtx{
 				IsGlobal:       true,
 				GroupName:      "group-1",
 				ReplicasetName: "replicaset-001",
@@ -838,7 +837,7 @@ roles:
 		},
 		{
 			name: "role already exists global",
-			rolesAddCtx: replicaset.RolesAddCtx{
+			rolesUpdateCtx: replicaset.RolesUpdateCtx{
 				IsGlobal: true,
 				RoleName: "config.storage",
 			},
@@ -846,12 +845,11 @@ roles:
 roles:
   - config.storage
 `)...),
-			isErr:  true,
-			errMsg: "role \"config.storage\" already exists in roles",
+			errMsg: "cannot update roles by path [roles]: role \"config.storage\" already exists",
 		},
 		{
 			name: "role already exists group",
-			rolesAddCtx: replicaset.RolesAddCtx{
+			rolesUpdateCtx: replicaset.RolesUpdateCtx{
 				GroupName: "group-1",
 				RoleName:  "config.storage",
 			},
@@ -859,13 +857,12 @@ roles:
     roles:
       - config.storage
 `)...),
-			isErr: true,
-			errMsg: "role \"config.storage\" already exists in" +
-				" groups/group-1/roles",
+			errMsg: "cannot update roles by path [groups group-1 roles]: role \"config.storage\"" +
+				" already exists",
 		},
 		{
 			name: "role already exists replicaset",
-			rolesAddCtx: replicaset.RolesAddCtx{
+			rolesUpdateCtx: replicaset.RolesUpdateCtx{
 				ReplicasetName: "replicaset-001",
 				RoleName:       "config.storage",
 			},
@@ -873,13 +870,12 @@ roles:
         roles:
           - config.storage
 `)...),
-			isErr: true,
-			errMsg: "role \"config.storage\" already exists in" +
-				" groups/group-1/replicasets/replicaset-001/roles",
+			errMsg: "cannot update roles by path [groups group-1 replicasets replicaset-001" +
+				" roles]: role \"config.storage\" already exists",
 		},
 		{
 			name: "role already exists instance",
-			rolesAddCtx: replicaset.RolesAddCtx{
+			rolesUpdateCtx: replicaset.RolesUpdateCtx{
 				InstName: "instance-001",
 				RoleName: "config.storage",
 			},
@@ -887,35 +883,31 @@ roles:
             roles:
               - config.storage
 `)...),
-			isErr: true,
-			errMsg: "role \"config.storage\" already exists in" +
-				" groups/group-1/replicasets/replicaset-001/instances/instance-001/roles",
+			errMsg: "cannot update roles by path [groups group-1 replicasets replicaset-001" +
+				" instances instance-001 roles]: role \"config.storage\" already exists",
 		},
 		{
 			name: "group not found",
-			rolesAddCtx: replicaset.RolesAddCtx{
+			rolesUpdateCtx: replicaset.RolesUpdateCtx{
 				GroupName: "g",
 			},
 			cfg:    cfg,
-			isErr:  true,
 			errMsg: "cannot find group \"g\"",
 		},
 		{
 			name: "replicaset not found above group",
 			cfg:  cfg,
-			rolesAddCtx: replicaset.RolesAddCtx{
+			rolesUpdateCtx: replicaset.RolesUpdateCtx{
 				ReplicasetName: "r",
 			},
-			isErr:  true,
 			errMsg: "cannot find replicaset \"r\" above group",
 		},
 		{
 			name: "instance not found above group and/or replicaset",
 			cfg:  cfg,
-			rolesAddCtx: replicaset.RolesAddCtx{
+			rolesUpdateCtx: replicaset.RolesUpdateCtx{
 				InstName: "i",
 			},
-			isErr:  true,
 			errMsg: "cannot find instance \"i\" above group and/or replicaset",
 		},
 	}
@@ -924,15 +916,201 @@ roles:
 			collector := newOnceMockDataCollector([]libcluster.Data{
 				{Source: "a", Value: tc.cfg, Revision: revision},
 			}, nil)
-			picker := replicaset.KeyPicker(func(keys []string, _ bool, _ string) (int, error) {
-				require.Equal(t, []string{"a"}, keys)
+			picker := replicaset.KeyPicker(func(opts replicaset.PickPatchKeyOpts) (int, error) {
+				require.Equal(t, []string{"a"}, opts.Keys)
 				return 0, nil
 			})
 			publisher := newOnceMockDataPublisher(nil)
 			source := replicaset.NewCConfigSource(collector, publisher, picker)
 
-			err := source.AddRole(tc.rolesAddCtx)
-			if tc.isErr {
+			err := source.AddRole(tc.rolesUpdateCtx)
+			if tc.errMsg != "" {
+				require.EqualError(t, err, tc.errMsg)
+			} else {
+				require.NoError(t, err)
+				assertPublished(t, publisher, "a", revision, tc.expectedCfg)
+			}
+		})
+	}
+}
+
+func TestCConfigSource_RemoveRole(t *testing.T) {
+	cfg := []byte(`groups:
+  group-1:
+    replicasets:
+      replicaset-001:
+        instances:
+          instance-001:
+            iproto:
+              listen: {}`)
+	type tCase struct {
+		name           string
+		rolesUpdateCtx replicaset.RolesUpdateCtx
+		cfg            []byte
+		expectedCfg    []byte
+		errMsg         string
+	}
+	cases := []tCase{
+		{
+			name: "ok global",
+			rolesUpdateCtx: replicaset.RolesUpdateCtx{
+				IsGlobal: true,
+				RoleName: "config.storage",
+			},
+			cfg: append(cfg, []byte(`
+roles:
+  - config.storage
+`)...),
+			expectedCfg: append(cfg, []byte(`
+roles: []
+`)...),
+		},
+		{
+			name: "ok group",
+			rolesUpdateCtx: replicaset.RolesUpdateCtx{
+				GroupName: "group-1",
+				RoleName:  "config.storage",
+			},
+			cfg: append(cfg, []byte(`
+    roles:
+      - config.storage
+`)...),
+			expectedCfg: append(cfg, []byte(`
+    roles: []
+`)...),
+		},
+		{
+			name: "ok replicaset",
+			rolesUpdateCtx: replicaset.RolesUpdateCtx{
+				ReplicasetName: "replicaset-001",
+				RoleName:       "config.storage",
+			},
+			cfg: append(cfg, []byte(`
+        roles:
+          - config.storage
+`)...),
+			expectedCfg: append(cfg, []byte(`
+        roles: []
+`)...),
+		},
+		{
+			name: "ok instance",
+			rolesUpdateCtx: replicaset.RolesUpdateCtx{
+				InstName: "instance-001",
+				RoleName: "config.storage",
+			},
+			cfg: append(cfg, []byte(`
+            roles:
+              - config.storage
+`)...),
+			expectedCfg: append(cfg, []byte(`
+            roles: []
+`)...),
+		},
+		{
+			name: "ok many scopes",
+			rolesUpdateCtx: replicaset.RolesUpdateCtx{
+				IsGlobal:       true,
+				GroupName:      "group-1",
+				ReplicasetName: "replicaset-001",
+				InstName:       "instance-001",
+				RoleName:       "config.storage",
+			},
+			cfg: append(cfg, []byte(`
+            roles:
+              - config.storage
+        roles:
+          - config.storage
+    roles:
+      - config.storage
+roles:
+  - config.storage
+`)...),
+			expectedCfg: append(cfg, []byte(`
+            roles: []
+        roles: []
+    roles: []
+roles: []
+`)...),
+		},
+		{
+			name: "role not found global",
+			rolesUpdateCtx: replicaset.RolesUpdateCtx{
+				IsGlobal: true,
+				RoleName: "config.storage",
+			},
+			cfg:    cfg,
+			errMsg: "cannot update roles by path [roles]: role \"config.storage\" not found",
+		},
+		{
+			name: "role not found group",
+			rolesUpdateCtx: replicaset.RolesUpdateCtx{
+				GroupName: "group-1",
+				RoleName:  "config.storage",
+			},
+			cfg: cfg,
+			errMsg: "cannot update roles by path [groups group-1 roles]: role \"config.storage\"" +
+				" not found",
+		},
+		{
+			name: "role not found replicaset",
+			rolesUpdateCtx: replicaset.RolesUpdateCtx{
+				ReplicasetName: "replicaset-001",
+				RoleName:       "config.storage",
+			},
+			cfg: cfg,
+			errMsg: "cannot update roles by path [groups group-1 replicasets replicaset-001" +
+				" roles]: role \"config.storage\" not found",
+		},
+		{
+			name: "role not found instance",
+			rolesUpdateCtx: replicaset.RolesUpdateCtx{
+				InstName: "instance-001",
+				RoleName: "config.storage",
+			},
+			cfg: cfg,
+			errMsg: "cannot update roles by path [groups group-1 replicasets replicaset-001" +
+				" instances instance-001 roles]: role \"config.storage\" not found",
+		},
+		{
+			name: "group not found",
+			rolesUpdateCtx: replicaset.RolesUpdateCtx{
+				GroupName: "g",
+			},
+			cfg:    cfg,
+			errMsg: "cannot find group \"g\"",
+		},
+		{
+			name: "replicaset not found above group",
+			cfg:  cfg,
+			rolesUpdateCtx: replicaset.RolesUpdateCtx{
+				ReplicasetName: "r",
+			},
+			errMsg: "cannot find replicaset \"r\" above group",
+		},
+		{
+			name: "instance not found above group and/or replicaset",
+			cfg:  cfg,
+			rolesUpdateCtx: replicaset.RolesUpdateCtx{
+				InstName: "i",
+			},
+			errMsg: "cannot find instance \"i\" above group and/or replicaset",
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			collector := newOnceMockDataCollector([]libcluster.Data{
+				{Source: "a", Value: tc.cfg, Revision: revision},
+			}, nil)
+			picker := replicaset.KeyPicker(func(opts replicaset.PickPatchKeyOpts) (int, error) {
+				require.Equal(t, []string{"a"}, opts.Keys)
+				return 0, nil
+			})
+			publisher := newOnceMockDataPublisher(nil)
+			source := replicaset.NewCConfigSource(collector, publisher, picker)
+
+			err := source.RemoveRole(tc.rolesUpdateCtx)
+			if tc.errMsg != "" {
 				require.EqualError(t, err, tc.errMsg)
 			} else {
 				require.NoError(t, err)

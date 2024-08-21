@@ -2,17 +2,17 @@ package replicaset
 
 import "fmt"
 
-// RolesAddCtx describes a context for adding roles.
-type RolesAddCtx struct {
-	// InstName is an instance name in which add role.
+// RolesUpdateCtx describes a context for adding/removing roles.
+type RolesUpdateCtx struct {
+	// InstName is an instance name in which add/remove role.
 	InstName string
-	// GroupName is an instance name in which add role.
+	// GroupName is an instance name in which add/remove role.
 	GroupName string
-	// ReplicasetName is an instance name in which add role.
+	// ReplicasetName is an instance name in which add/remove role.
 	ReplicasetName string
-	// IsGlobal is an boolean value if role needs to add in global scope.
+	// IsGlobal is an boolean value if role needs to add/remove in global scope.
 	IsGlobal bool
-	// RoleName is a role name which needs to add into config.
+	// RoleName is a role name which needs to add/remove into config.
 	RoleName string
 	// Force is true when promoting can skip
 	// some non-critical checks.

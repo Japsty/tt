@@ -73,22 +73,19 @@ type PromoteCtx struct {
 }
 
 // pickPatchKey prompts to select a key to patch the config.
-func pickPatchKey(keys []string, force bool, pathMsg string) (int, error) {
-	if len(keys) == 0 {
+// If force is true, picks the first passed key.
+func pickPatchKey(opts replicaset.PickPatchKeyOpts) (int, error) {
+	if len(opts.Keys) == 0 {
 		return 0, fmt.Errorf("no keys for the config patching")
 	}
 	var (
 		pos = 0
 		err error
 	)
-	if !force && len(keys) != 1 {
-		label := "Select a key for the config patching"
-		if len(pathMsg) != 0 {
-			label = fmt.Sprintf("%s for destination path %q", label, pathMsg)
-		}
+	if !opts.Force && len(opts.Keys) != 1 {
 		programSelect := promptui.Select{
 			Label:        "Select a key for the config patching",
-			Items:        keys,
+			Items:        opts.Keys,
 			HideSelected: true,
 		}
 		pos, _, err = programSelect.Run()
@@ -96,7 +93,7 @@ func pickPatchKey(keys []string, force bool, pathMsg string) (int, error) {
 			return 0, err
 		}
 	}
-	log.Infof("Patching the config by the key: %q", keys[pos])
+	log.Infof("Patching the config by the key: %q", opts.Keys[pos])
 	return pos, nil
 }
 
@@ -272,13 +269,13 @@ func Expel(uri *url.URL, ctx ExpelCtx) error {
 	return err
 }
 
-// RolesAddCtx describes the context to add role of instance.
+// RolesAddCtx describes the context to add role.
 type RolesAddCtx struct {
-	// InstName is an instance name in which add or remove role.
+	// InstName is an instance name in which add role.
 	InstName string
-	// GroupName is an replicaset name in which add or remove role.
+	// GroupName is an replicaset name in which add role.
 	GroupName string
-	// ReplicasetName is an replicaset name in which add or remove role.
+	// ReplicasetName is an replicaset name in which add role.
 	ReplicasetName string
 	// IsGlobal is an boolean value if role needs to add in global scope.
 	IsGlobal bool
@@ -317,7 +314,66 @@ func AddRole(uri *url.URL, ctx RolesAddCtx) error {
 
 	source := replicaset.NewCConfigSource(collector, publisher,
 		replicaset.KeyPicker(pickPatchKey))
-	err = source.AddRole(replicaset.RolesAddCtx{
+	err = source.AddRole(replicaset.RolesUpdateCtx{
+		InstName:       ctx.InstName,
+		GroupName:      ctx.GroupName,
+		ReplicasetName: ctx.ReplicasetName,
+		IsGlobal:       ctx.IsGlobal,
+		RoleName:       ctx.RoleName,
+		Force:          ctx.Force,
+	})
+	if err == nil {
+		log.Info("Done.")
+	}
+	return err
+}
+
+// RolesRemoveCtx describes the context to remove role.
+type RolesRemoveCtx struct {
+	// InstName is an instance name in which remove role.
+	InstName string
+	// GroupName is an replicaset name in which remove role.
+	GroupName string
+	// ReplicasetName is an replicaset name in which remove role.
+	ReplicasetName string
+	// IsGlobal is an boolean value if role needs to remove in global scope.
+	IsGlobal bool
+	// RoleName is a name of role to remove.
+	RoleName string
+	// Publishers is data publisher factory.
+	Publishers libcluster.DataPublisherFactory
+	// Collectors is data collector factory.
+	Collectors libcluster.DataCollectorFactory
+	// Username defines a username for connection.
+	Username string
+	// Password defines a password for connection.
+	Password string
+	// Force true if the key selection for patching the config
+	// should be skipped.
+	Force bool
+}
+
+// RemoveRole removes a role by patching the cluster config.
+func RemoveRole(uri *url.URL, ctx RolesRemoveCtx) error {
+	opts, err := ParseUriOpts(uri)
+	if err != nil {
+		return fmt.Errorf("invalid URL %q: %w", uri, err)
+	}
+	connOpts := connectOpts{
+		Username: ctx.Username,
+		Password: ctx.Password,
+	}
+
+	collector, publisher, closeFunc, err := createDataCollectorAndKeyPublisher(
+		ctx.Collectors, ctx.Publishers, opts, connOpts)
+	if err != nil {
+		return err
+	}
+	defer closeFunc()
+
+	source := replicaset.NewCConfigSource(collector, publisher,
+		replicaset.KeyPicker(pickPatchKey))
+	err = source.RemoveRole(replicaset.RolesUpdateCtx{
 		InstName:       ctx.InstName,
 		GroupName:      ctx.GroupName,
 		ReplicasetName: ctx.ReplicasetName,
